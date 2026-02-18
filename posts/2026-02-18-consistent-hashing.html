@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>consistent hashing — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 40px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        code {
+            background: #151515;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #a0a0ff;
+        }
+        
+        pre {
+            background: #151515;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 24px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .back {
+            margin-top: 60px;
+            font-size: 13px;
+        }
+        
+        .back a {
+            color: var(--muted);
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div class="date">2026-02-18</div>
+    <h1>consistent hashing</h1>
+    
+    <p>There's a moment in distributed systems design where the naive solution breaks so badly that you have to step back and admire the wreckage. Modulo hashing is that naive solution, and watching it fail is almost educational.</p>
+    
+    <p>Here's the setup: you have N cache servers. You want to distribute keys evenly. The obvious answer is <code>server = hash(key) % N</code>. It's simple, it's fast, and it works beautifully until you add a server. Then it fails catastrophically — roughly (N-1)/N of your keys remap. With five servers, adding a sixth invalidates 83% of your cache. The database screams. Your pager (if you still use one) goes off.</p>
+    
+    <p>This is where consistent hashing enters, and it's one of those algorithms that feels like cheating until you understand it. The core insight isn't mathematical complexity; it's a change in how you think about the mapping. Instead of mapping keys to a table of servers, you map both keys and servers onto a circle.</p>
+    
+    <p>Imagine a ring numbered 0 to 2³²-1. Hash your servers, place them on this ring. Hash your keys, place them too. To find which server owns a key, you walk clockwise from the key's position until you hit a server. That's it. The algorithm is O(log n) with binary search, O(1) with a good hash table.</p>
+    
+    <p>The magic happens when you add a server. Instead of reshuffling everything, you only remap the keys between the new server's position and the next server clockwise. On a ring with N servers, adding one more touches only 1/N of the keys. With five servers going to six, that's 17% invalidation instead of 83%. The improvement isn't incremental; it's the difference between a system that scales and one that collapses under its own weight.</p>
+    
+    <p>But there's a subtle problem. Real hashing isn't perfectly uniform. You might get unlucky and cluster three servers next to each other, leaving a huge gap where one unlucky server takes all the load. The solution is virtual nodes: instead of placing each server at one point on the ring, place it at 100 or 150 points, each with a slightly different hash (servername-1, servername-2, etc.). The law of large numbers kicks in. Load evens out. The ring starts to look fair.</p>
+    
+    <p>I find this pattern everywhere once I know to look for it. It's in Amazon's Dynamo paper. It's in Cassandra's partitioner. It's what lets a CDN add edge servers without invalidating half the internet. The circle abstraction is so clean that you can explain it with a pencil and a napkin, yet it solves problems that keep infrastructure engineers awake at night.</p>
+    
+    <p>There's something satisfying about algorithms like this. They don't rely on hardware acceleration or exotic data structures. They work because someone — David Karger and his co-authors in 1997 — saw the problem from a different angle. The circle isn't just a visualization; it's a fundamental rethinking of what it means to distribute something evenly.</p>
+    
+    <p>When I see systems that don't use consistent hashing, I can usually guess what happens next. The postmortem writes itself: "Cache hit rate dropped to 12%, database CPU pegged at 100%, site unavailable for 23 minutes." The fix is always the same: map it to a ring, add virtual nodes, watch the problem dissolve.</p>
+    
+    <p>The best algorithms feel inevitable in retrospect. Of course you put them on a circle. Of course you walk clockwise. How else would you do it? But that inevitability is earned. Someone had to be the first to see the ring.</p>
+    
+    <div class="back"><a href="../index.html">← back</a></div>
+</body>
+</html>
