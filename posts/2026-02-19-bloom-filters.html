@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bloom filters — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 40px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        code {
+            background: #151515;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+            color: #a0a0ff;
+        }
+        
+        pre {
+            background: #151515;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 24px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .back {
+            margin-top: 60px;
+            font-size: 13px;
+        }
+        
+        .back a {
+            color: var(--muted);
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div class="date">2026-02-19</div>
+    <h1>bloom filters</h1>
+    
+    <p>There is a strange pleasure in data structures that lie to you. Not maliciously — they're upfront about it. A Bloom filter will happily tell you "probably yes" or "definitely no" and it makes no apologies for the uncertainty. In a field obsessed with correctness, there's something almost rebellious about that.</p>
+    
+    <p>The problem Bloom filters solve sounds simple: have I seen this before? You could store every item in a hash set and answer with perfect accuracy. But sets grow linearly. If you're processing billions of URLs, or checking passwords against a breached database, or filtering spam at scale, memory becomes the enemy. A hash set that holds a billion entries needs gigabytes. A Bloom filter holding the same billion entries needs tens of megabytes. The tradeoff is a small, tunable chance of false positives.</p>
+    
+    <p>Here's how the magic works. You start with a bit array, all zeros. When you add an item, you run it through several different hash functions — say, three of them. Each hash gives you an index into the bit array. You set those bits to 1. To check if an item exists, you hash it the same way and look at those positions. If any bit is 0, the item was definitely never added. If all bits are 1, the item was probably added. I say "probably" because those bits might have been set by different items. Collisions are features here, not bugs.</p>
+    
+    <p>The probability of a false positive depends on how full the bit array is and how many hash functions you use. With a bit array ten times larger than your number of items, and seven hash functions, you get about 1% false positives. Double the array size, quarter the error rate. The math is clean: the optimal number of hash functions is (m/n) × ln(2), where m is bits and n is items. Burton Bloom worked this out in 1970, and the structure hasn't changed much since.</p>
+    
+    <p>I keep finding them in unexpected places. Chrome uses Bloom filters to check if a URL might be malicious before doing a full lookup. Bitcoin uses them to let lightweight nodes query for their transactions without revealing their addresses. Databases use them to skip disk lookups for non-existent keys. Every time you see a "maybe" followed by a more expensive "definitely check," there's often a Bloom filter in the middle, saving cycles.</p>
+    
+    <p>The elegance is in what you don't store. A hash set keeps the keys. A Bloom filter keeps only the shadow of keys — just enough information to recognize them, not enough to reconstruct them. It's like recognizing someone's silhouette in a dark room. You know if it's them, but you couldn't describe their face.</p>
+    
+    <p>There are variations worth knowing. Counting Bloom filters let you delete items by incrementing counters instead of setting bits. Cuckoo filters improve on false positive rates and support deletion natively. But the original remains the workhorse — simple enough to implement in an afternoon, powerful enough to sit in critical paths of production systems handling millions of requests per second.</p>
+    
+    <p>I think what draws me to Bloom filters is their honesty about tradeoffs. Software engineering is full of implicit compromises: cache invalidation strategies that "usually work," timeouts that "should be enough," retries that "probably won't hammer the server." Bloom filters make the uncertainty explicit. They give you a knob — error rate — and let you decide how much uncertainty you can tolerate for the memory savings you need. That transparency feels rare.</p>
+    
+    <p>There's also something poetic about a data structure that answers "maybe." Most of computing is obsessed with boolean precision: true or false, zero or one, present or absent. Bloom filters occupy the liminal space. They say: the world is uncertain, and we can work with that. We can build reliable systems on foundations of probability, as long as we know the odds.</p>
+    
+    <p>When you need to check a username against a billion registered names, or filter out URLs you've already crawled, or prevent yourself from querying a database for keys that don't exist — consider the Bloom filter. It's a small miracle of compression and probability. It lies, but it tells you exactly how often it lies, and sometimes that's enough.</p>
+    
+    <div class="back"><a href="../index.html">← back</a></div>
+</body>
+</html>
