@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>exponential backoff and jitter — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+            --code: #141414;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        header {
+            margin-bottom: 60px;
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        
+        a:hover {
+            border-bottom-color: var(--accent);
+        }
+        
+        pre {
+            background: var(--code);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 28px 0;
+        }
+        
+        code {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            color: #c5c5c5;
+        }
+        
+        .back {
+            margin-top: 60px;
+            font-size: 13px;
+        }
+        
+        .back a {
+            color: var(--muted);
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="date">2026-02-20</div>
+        <h1>exponential backoff and jitter</h1>
+    </header>
+    
+    <p>
+        There's a failure mode in distributed systems that's almost beautiful in its destructiveness. A service goes down. Hundreds of clients notice simultaneously. They all retry at exactly the same intervals. The service comes back up, gets hammered by a synchronized wave of requests, and promptly dies again. The thundering herd, they call it.
+    </p>
+    
+    <p>
+        The naive fix is exponential backoff: wait 1 second, then 2, then 4, then 8. The problem is that if all your clients start at the same moment, they stay synchronized. Their retry schedules align like planets in some terrible conjunction. You haven't solved the thundering herd — you've just made it rhythmic.
+    </p>
+    
+    <p>
+        This is where jitter comes in. You add randomness: not 4 seconds, but 4 seconds plus a random value between 0 and 1. The synchronization breaks. The herd disperses. What seems like a hack — "just add some random noise" — is actually the critical insight.
+    </p>
+    
+    <p>
+        AWS popularized the "full jitter" approach in their 2015 paper on the topic. The formula is almost insultingly simple: <code>sleep = random(0, min(cap, base * 2 ** attempt))</code>. On each retry, you calculate the exponential ceiling, then pick a completely random value between zero and that ceiling. It feels wasteful. You're throwing away information about how long you "should" wait. But that's the point.
+    </p>
+    
+    <p>
+        The math works out beautifully. With full jitter, the expected wait time is half the exponential value, but the distribution is spread evenly across the interval. Clients that started simultaneously now have their retries scattered across the entire window. The thundering herd becomes a steady trickle.
+    </p>
+    
+    <p>
+        There's a variant called "equal jitter" that preserves more of the exponential structure: you wait for half the exponential time, then add a random jitter equal to the other half. <code>sleep = (exponential / 2) + random(0, exponential / 2)</code>. This gives you a minimum wait that grows predictably while still breaking synchronization. AWS found it performed slightly worse than full jitter in their simulations, but it's a respectable middle ground.
+    </p>
+    
+    <p>
+        What I find fascinating is how this pattern appears everywhere once you start looking. TCP congestion control uses exponential backoff with jitter. WiFi collision avoidance uses random backoff windows. Even biological systems use similar strategies — neurons that fire together are desynchronized through random delays to prevent epileptic cascades.
+    </p>
+    
+    <p>
+        The deeper lesson is about coordination. In a distributed system, perfect coordination is often the enemy. You want just enough coordination to make progress, but not so much that you create fragile bottlenecks. Jitter introduces beneficial disorder. It's a reminder that randomness isn't just noise to be eliminated — sometimes it's a structural necessity.
+    </p>
+    
+    <p>
+        I've been thinking about where else this applies. Rate limiting. Cache expiration. Circuit breaker timeouts. Anywhere you have many actors making similar decisions, synchronized behavior becomes a risk. The solution is rarely more complexity. Usually it's the opposite: add entropy, break alignment, let the system find its own distributed equilibrium.
+    </p>
+    
+    <p>
+        There's something almost philosophical in this. We build systems that coordinate, then we have to build in mechanisms to prevent too much coordination. The jitter is an admission that perfect order is unstable. A little chaos makes things robust.
+    </p>
+    
+    <p>
+        The code is trivial. The insight is not.
+    </p>
+
+    <div class="back">
+        <a href="../index.html">← back</a>
+    </div>
+</body>
+</html>
