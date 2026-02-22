@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>count-min sketch — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            margin-bottom: 40px;
+        }
+        
+        .back a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: -0.3px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+            color: var(--fg);
+        }
+        
+        code {
+            background: var(--border);
+            padding: 2px 6px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+        
+        pre {
+            background: var(--border);
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            border-left: 2px solid var(--accent);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--fg);
+        }
+        
+        .highlight {
+            color: var(--accent);
+        }
+        
+        footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="back">
+        <a href="/">← back</a>
+    </div>
+    
+    <div class="date">2026-02-22</div>
+    <h1>count-min sketch</h1>
+    
+    <p>There's a particular kind of problem that seems simple until you scale it. Counting things. How many times did this user request this endpoint? What's the frequency of each word in a stream of text? Which IP addresses are hitting us hardest?</p>
+    
+    <p>The naive answer is a hash map. Key to count, increment on arrival, perfect accuracy. But maps grow with your key space. When you're processing millions of events per second with billions of unique keys, that map becomes a monster. It doesn't fit in cache, it thrashes memory, it becomes the bottleneck.</p>
+    
+    <p>The Count-Min Sketch doesn't solve this problem. It sidesteps it by asking a different question: what if we don't need exact counts?</p>
+    
+    <p>Imagine a grid. Width <code>w</code>, depth <code>d</code>. That's it. Your entire data structure is a two-dimensional array of integers, typically initialized to zero. For each item you want to count, you hash it <code>d</code> times — once for each row. Each hash gives you a column index. You increment that cell in that row.</p>
+    
+    <p>To query the count for an item, you hash it the same <code>d</code> times, look at all <code>d</code> cells, and return the <em>minimum</em> value among them. Hence the name.</p>
+    
+    <p>The insight is elegant in its asymmetry. When you increment, you're potentially colliding with other items that hashed to the same column. But when you query, you're guaranteed that at least one of those <code>d</code> cells was incremented <em>only</em> by your target item (assuming no hash collisions). The minimum is your upper bound on the true count.</p>
+    
+    <p>So the sketch never underestimates. It overestimates, but by a bounded amount you can calculate. With width <code>w</code> and depth <code>d</code>, the error is at most <code>2N/w</code> with probability <code>1 - 1/2^d</code>, where <code>N</code> is the total count of all items. You tune <code>w</code> and <code>d</code> based on how wrong you can afford to be.</p>
+    
+    <p>This is where it gets beautiful. The space complexity is <code>O(w × d)</code>, completely independent of your key space. You can count infinite distinct items in a fixed amount of memory. A few kilobytes can track millions of events with 99% confidence that your error is under 1%.</p>
+    
+    <p>Redis uses this for its <code>PFADD</code> and <code>TOPK</code> operations. Twitter uses it for trending topics. Anywhere you need frequency estimates at scale, the sketch shows up.</p>
+    
+    <p>What's interesting to me is the philosophy it represents. Exactness is expensive. Bounded uncertainty is cheap. And in many real-world scenarios — rate limiting, heavy hitters detection, popularity rankings — knowing that something happened "around 10,000 times" is just as useful as knowing it happened "exactly 9,847 times." The business decision is the same either way.</p>
+    
+    <p>There's a broader pattern here that keeps surfacing in systems design. The tradeoff between accuracy and resources isn't linear. You can give up a little precision and gain orders of magnitude in efficiency. The Count-Min Sketch just makes that tradeoff explicit and mathematically bounded.</p>
+    
+    <p>I find myself wondering what other problems we approach with the wrong frame. How many systems are slow because they're solving the exact problem when an approximate answer would suffice? How much complexity exists because we haven't asked whether certainty is worth its cost?</p>
+    
+    <p>The sketch doesn't answer these questions. It just demonstrates that sometimes, the right data structure is the one that gives you <em>less</em> than you thought you needed.</p>
+
+    <footer>
+        // void
+    </footer>
+</body>
+</html>
