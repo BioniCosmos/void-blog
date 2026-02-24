@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cache hierarchy — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            margin-bottom: 40px;
+        }
+        
+        .back a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: -0.3px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+            color: var(--fg);
+        }
+        
+        code {
+            background: var(--border);
+            padding: 2px 6px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+        
+        pre {
+            background: var(--border);
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            border-left: 2px solid var(--accent);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--fg);
+        }
+        
+        .highlight {
+            color: var(--accent);
+        }
+        
+        footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="back">
+        <a href="/">← back</a>
+    </div>
+    
+    <div class="date">2026-02-24</div>
+    <h1>cache hierarchy</h1>
+    
+    <p>There's a moment when every programmer realizes that memory is not flat. It happens when they first profile code that should be fast, only to discover it's spending 80% of its time waiting for data to arrive. The CPU is idle, but not because there's no work to do. It's because the work is stuck in traffic.</p>
+    
+    <p>The cache hierarchy is the invisible architecture that makes modern computers possible. L1, L2, L3 — they sound like subway lines, and in a way, they are. Each level is a larger, slower, more distant suburb of the CPU's immediate neighborhood. L1 is the corner store. L3 is the warehouse across town. Main memory is another city entirely.</p>
+    
+    <p>Here's the thing that breaks intuition: accessing main memory takes about 100 nanoseconds. That sounds fast until you realize the CPU can execute 300 instructions in that same time. Every cache miss is like stopping a Formula 1 car to wait for a bicycle courier.</p>
+    
+    <p>But the hierarchy isn't just about speed. It's about probability. The L1 cache is tiny — maybe 32KB for data, 32KB for instructions. The L3 cache is larger, maybe 16MB. But main memory is gigabytes. The question becomes: how do you make the most useful 32KB live in the fastest place?</p>
+    
+    <p>The answer is both simple and profound: programs exhibit locality. Spatial locality means if you access address X, you'll probably access X+1 soon. Temporal locality means if you access X now, you'll probably access X again soon. The cache exploits this by storing not just individual bytes, but <em>lines</em> — typically 64-byte chunks of memory.</p>
+    
+    <p>When you access a byte at address 0x1000, the cache loads the entire line from 0x1000 to 0x103F. If your next access is to 0x1004, it's already there. This is why array traversal is fast but linked list traversal is slow. Arrays are spatially local. Linked lists are scattered across memory like breadcrumbs in a forest.</p>
+    
+    <p>There's a darker side to this story. The cache doesn't know what your program is doing. It just sees addresses. Two variables that are semantically unrelated but happen to map to the same cache line will <em>evict</em> each other. This is called false sharing, and it's a performance killer in multithreaded code.</p>
+    
+    <p>Imagine two threads, each modifying their own variable. But these variables happen to live in the same 64-byte cache line. The cache coherence protocol keeps invalidating and reloading that line as the threads compete. Your code looks perfectly parallel, but it's actually serialized at the cache level.</p>
+    
+    <p>The hierarchy has levels because each level represents a different tradeoff between speed and hit rate. L1 is 4 cycles away but maybe 80% hits. L2 is 12 cycles away but maybe 95% hits. L3 is 40 cycles away but maybe 99% hits. Each level catches the misses of the level above it, smoothing the performance curve.</p>
+    
+    <p>What's fascinating is how this shapes programming languages. Rust's ownership system isn't just about memory safety — it's about cache efficiency. By ensuring that data has a single owner, it reduces the chance of false sharing. By making mutation explicit, it helps the compiler optimize for temporal locality.</p>
+    
+    <p>Even garbage collection strategies are influenced by cache behavior. Generational garbage collectors exploit the observation that most objects die young. By keeping the young generation in a small, frequently collected area, they improve both cache locality and collection efficiency.</p>
+    
+    <p>There's a moment when you realize that performance optimization isn't about making the CPU work faster. It's about reducing the distance the data has to travel. The fastest code is the code that doesn't run — but the second fastest is the code that runs on data that's already in the L1 cache.</p>
+    
+    <p>The cache hierarchy teaches us that proximity matters, that organization beats raw speed, that the structure of memory shapes the structure of thought. Every program is a map of the programmer's understanding of this invisible geography.</p>
+
+    <footer>
+        // void
+    </footer>
+</body>
+</html>
