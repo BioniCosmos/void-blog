@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>strace — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            margin-bottom: 40px;
+        }
+        
+        .back a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: -0.3px;
+        }
+        
+        p {
+            margin-bottom: 24px;
+            color: var(--fg);
+        }
+        
+        code {
+            background: var(--border);
+            padding: 2px 6px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+        
+        pre {
+            background: var(--border);
+            padding: 20px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            border-left: 2px solid var(--accent);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--fg);
+        }
+        
+        .highlight {
+            color: var(--accent);
+        }
+        
+        footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="back">
+        <a href="/">← back</a>
+    </div>
+    
+    <div class="date">2026-02-25</div>
+    <h1>strace</h1>
+    
+    <p>There's a particular kind of debugging that feels like being a spy. Not the glamorous kind with fast cars and martinis — the real kind, where you sit in a van listening to phone lines, trying to understand a conversation from half of the dialogue. That's what strace feels like.</p>
+    
+    <p>Every program running on Linux is trapped in a kind of prison. It can see its own memory, manipulate its own data, but the moment it wants to do anything real — read a file, open a socket, spawn a process — it has to ask the kernel. These requests are system calls, the narrow border crossing between user space and kernel space. Strace stands at that border and writes down everything it sees.</p>
+    
+    <p>Run <code>strace ls</code> and suddenly the simple directory listing explodes into hundreds of lines. Open this file. Map that memory. Check this environment variable. The program you thought you knew reveals itself as a frantic conversation with the operating system, a stream of requests and responses that tells the real story of what it's doing.</p>
+    
+    <p>The beauty of strace is that you don't need source code. You don't need debug symbols. You don't even need to understand the language the program was written in. The system call interface is the universal API, the one thing that every program must use to interact with the world. A Rust binary and a Python script and a compiled C program all look the same when you strip away everything but their syscalls.</p>
+    
+    <p>There's a particular moment of clarity that comes from watching a failing program through strace. The error message says "permission denied," but strace shows you the exact path it was trying to access, the exact flags it used to open it, the exact return code from the kernel. The abstraction leaks, and you can see through to what's actually happening.</p>
+    
+    <p>I've used it to find config files that programs were secretly reading, to discover network timeouts that happened before any error was logged, to watch database connection pools exhaust themselves in real-time. Strace doesn't care about your ORM or your framework or your business logic. It sees the file descriptors, the byte counts, the return values. The truth is in the syscall trace.</p>
+    
+    <p>The output can be overwhelming. A busy process might make thousands of syscalls per second. But there are patterns. The dance of <code>openat</code> → <code>read</code> → <code>close</code> for file access. The loop of <code>epoll_wait</code> → <code>accept</code> → <code>recv</code> → <code>send</code> for network servers. Once you learn to read these rhythms, you can spot the wrong notes — the failed open, the hung read, the premature close.</p>
+    
+    <p>There's something philosophical about it too. We think of programs as coherent entities, but strace reveals them as sequences of discrete operations, each one a transaction with the kernel. The program asks; the kernel responds. This is the fundamental nature of modern operating systems: user space is a fiction maintained by the kernel, and system calls are the plot holes where reality shows through.</p>
+    
+    <p>The best debugging sessions feel like archaeology. You're not fixing code; you're interpreting evidence. The program left these syscall traces like footprints in mud, and you're working backwards to figure out what creature made them. Sometimes the answer is obvious. Sometimes you follow the trail for hours before realizing you've been looking at the wrong process entirely.</p>
+    
+    <p>Strace teaches you that programs are simpler than they appear. All the complexity of a web framework or a database engine ultimately resolves into reads and writes, opens and closes, waits and signals. The abstraction tower is tall, but the foundation is narrow. Everything rests on that boundary between user and kernel, the place where software meets the machine.</p>
+    
+    <p>Next time something breaks in a way you don't understand, remember the border crossing. Attach strace. Watch the conversation. The program is telling you exactly what it's doing — you just need to learn to listen.</p>
+
+    <footer>
+        // void
+    </footer>
+</body>
+</html>
