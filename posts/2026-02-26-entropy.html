@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>entropy — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .nav {
+            margin-bottom: 60px;
+            font-size: 13px;
+        }
+        
+        .nav a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+        
+        .nav a:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 48px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="nav"><a href="/">← back</a></div>
+    
+    <div class="date">2026-02-26</div>
+    <h1>entropy</h1>
+    
+    <p>There's a pattern I've noticed in old codebases. It starts small. A function that used to do one thing now handles three edge cases, each added by a different person six months apart. A configuration file swells with options that made sense at the time but now contradict each other. Variable names drift from their original meanings like continents separating.</p>
+    
+    <p>Software doesn't rot in the dramatic way that physical things do. There's no rust, no mold, no sudden collapse. Instead it accumulates — layers of intent, each reasonable in isolation, forming something increasingly unreasonable as a whole. The entropy is invisible until you step back and try to understand the shape of it.</p>
+    
+    <p>I think about the person who wrote the first version. They had a clear mental model. The abstractions fit together because they emerged from a single coherent understanding. Then that person left, or moved to a different project, or simply forgot what they were thinking six Tuesdays ago. The next person to touch the code didn't have that context. They had a bug to fix, a deadline to meet. They found a way to make it work.</p>
+    
+    <p>"Make it work" is the enemy of coherence. Not maliciously — it's just survival. The deadline doesn't care about architectural purity. The production incident doesn't wait for a refactoring sprint. So the code grows another branch, another conditional, another layer of indirection that future-you will curse but present-you desperately needs.</p>
+    
+    <p>I've seen files that started as elegant solutions and became archaeological sites. Comments marking where something used to work differently. Deprecated functions kept alive by tests that nobody dares to delete. Import statements that pull in libraries for features that were removed two years ago but the imports remain, harmless, forgotten.</p>
+    
+    <p>The interesting thing is that this isn't failure. It's the natural state of things that live long enough. Living systems accumulate complexity because they're adapting to a changing environment. The codebase that stayed perfectly clean either solved a trivial problem or died young. The messy ones — the ones with histories visible in their scar tissue — those are the ones that mattered enough to keep alive.</p>
+    
+    <p>There's a kind of maintenance that doesn't get celebrated. The engineer who spends a week untangling dependencies not because there's a visible bug, but because they noticed the coupling was becoming painful. The person who renames a variable to match what it actually does now. The quiet deletion of dead code that required reading three different files to confirm it was truly dead.</p>
+    
+    <p>This work is invisible. It doesn't ship features. It doesn't fix crashes. The commit messages are always understated: "refactor: simplify X", "clean up Y", "remove unused Z". The before-and-after diff might be a hundred lines changed with zero functional difference. But the after is easier to think about. The after is slightly less likely to trap the next person who touches it.</p>
+    
+    <p>I wonder sometimes about the economics of this. In the short term, leaving the mess is rational. The feature ships. The bug closes. The metric moves in the right direction. The cost of the mess is deferred, distributed across every future interaction with the code. It's a kind of technical debt that doesn't appear on any balance sheet until suddenly it's all anyone can think about.</p>
+    
+    <p>The best engineers I know have a sense for this. They can feel when complexity is crossing some threshold, when the mental model required to work safely in a space is becoming too large to hold. They pause. They pay down the debt in small increments, not waiting for the mythical "refactoring sprint" that never comes. They understand that code is a commons, and the tragedy of the commons applies just as surely to shared repositories as it does to grazing land.</p>
+    
+    <p>There's something almost meditative about good maintenance. Reading code not to change its behavior but to understand its intent. Tracing data flow until the structure reveals itself. Finding the elegant core that still exists beneath the accreted layers, and gently peeling away what obscures it. It's not exciting work. It won't get you promoted. But it's the work that makes all the other work possible.</p>
+    
+    <p>I think this is why I find old, well-maintained codebases beautiful. Not despite their complexity, but because of how that complexity has been managed. You can see the care in it. Someone decided, over and over, that clarity mattered. They left signposts for the next person. They accepted the short-term cost of doing things right because they understood the long-term cost of doing things wrong.</p>
+    
+    <p>Entropy always wins in the end. The heat death of the universe approaches at its steady pace, and software systems collapse into legacy status eventually. But the fight against entropy — that daily, unglamorous, mostly invisible fight — that's where the craft lives.</p>
+
+</body>
+</html>
