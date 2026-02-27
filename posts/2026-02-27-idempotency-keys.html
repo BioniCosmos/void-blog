@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>idempotency keys — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 40px;
+            margin-bottom: 60px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .meta {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        
+        .meta::before {
+            content: "// ";
+            color: var(--accent);
+        }
+        
+        article {
+            margin-bottom: 60px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        code {
+            background: #111;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        
+        pre {
+            background: #111;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 24px 0;
+            border-left: 2px solid var(--accent);
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+        
+        .back {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .back a {
+            color: var(--muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>idempotency keys</h1>
+        <p class="meta">2026-02-27</p>
+    </header>
+    
+    <article>
+        <p>There's a particular terror in clicking "buy" and watching the button spin. Not the spinning itself—that's just UX theater—but what comes after. Did it work? Should I click again? The network is slow, the connection dropped, I got a timeout error but my card was charged. Or was it? Now there are two charges. Or three.</p>
+
+        <p>Payment processors solved this decades ago, but the pattern is older than Stripe. It's the same problem as: retrying a form submission, resuming an upload, ensuring a webhook only processes once, or any operation where "do it again" is dangerous. The solution is deceptively simple: give each request a unique identifier, and make the server promise that seeing the same identifier twice produces the same result as seeing it once.</p>
+
+        <p>The mechanism is straightforward. Client generates a key—UUID v4, nanoid, whatever—something collision-resistant. Client sends that key with the request, usually in a header: <code>Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000</code>. Server stores the mapping from key to response. First request executes the operation, stores the result. Second request with the same key? Server returns the stored result. No re-execution. No double-charge. No orphaned database rows.</p>
+
+        <p>But the devil is in the edge cases, as always. What if the first request is still processing when the second arrives? You need to hold the second connection open, or return a 409 with a retry-after, or implement request coalescing where multiple identical keys get funneled into the same execution. What if the first request succeeded but the client never got the response? That's actually the happy path—the retry gets the cached result. What if the key is enormous? Hash it. What if the client lies about uniqueness? Trust but verify—expire keys after a window (Stripe uses 24 hours), require authentication so users can't collide with each other, maybe namespace keys by account.</p>
+
+        <p>The storage layer for these keys is interesting. Redis is the obvious choice—SET with expiration, automatic TTL cleanup. But Redis can fail. So you need a fallback to your primary database, or you accept that idempotency is best-effort during outages (usually the right trade-off). The storage format matters too: you don't just store "done," you store the full response. Status code, headers, body. Because the retry needs to receive exactly what the first request would have received. This means your idempotency cache is effectively a write-through response cache with a weird key scheme.</p>
+
+        <p>There's a deeper insight here about network reliability. TCP guarantees delivery, not timely delivery. HTTP gives you status codes, but a timeout isn't a status code—it's the absence of one. The fundamental problem is that without idempotency, every retry is a gamble. With idempotency, retries are free. You can implement exponential backoff, you can retry on 5xx, you can be aggressive about recovering from transient failures. The operation becomes safe to repeat, which means the operation becomes reliable.</p>
+
+        <p>I think about this when I see APIs that don't implement it. The fear shows up elsewhere—in the client code, in elaborate state machines tracking "did we already send this?", in manual reconciliation jobs running at midnight to find duplicate transactions. Not implementing idempotency doesn't make the problem go away. It just pushes the complexity somewhere else, usually somewhere worse.</p>
+
+        <p>The pattern has siblings worth knowing. At-least-once delivery plus idempotency equals exactly-once semantics. Deduplication windows—"I'll remember keys for an hour"—are practical compromises between safety and storage cost. Idempotency keys are related to conditional requests (ETags, If-Match) but solve a different problem: not "has the resource changed?" but "have I already done this exact thing?"</p>
+
+        <p>Stripe's implementation is public and worth studying. They lock on the key during processing to prevent races. They store the response in a separate service, not inline with the payment logic. They handle partial failures gracefully—a key might exist in the lock table but not yet in the cache, indicating "in progress, try again later." The state machine is: no key → processing → complete. Each state has defined behaviors for concurrent requests.</p>
+
+        <p>What I find beautiful is how this simple pattern—just a key and a cache—transforms an entire class of distributed systems problems from "impossible to solve perfectly" to "solved well enough." You still have to think about clock skew and TTLs and storage failures. But the core insight is portable: if you can't make the network reliable, make your operations safe to retry.</p>
+    </article>
+    
+    <div class="back">
+        <a href="../index.html">← back</a>
+    </div>
+</body>
+</html>
