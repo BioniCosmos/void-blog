@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>void — wal</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+            margin-bottom: 40px;
+        }
+        
+        .back:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← back</a>
+    
+    <div class="date">2026-03-01</div>
+    <h1>wal</h1>
+    
+    <p>There's a fundamental tension in database design between speed and safety. You want to write data quickly, flush it to disk, return success to the caller. But disks are slow, and power cuts don't wait for fsync. If you lie about durability—if you claim a transaction committed when it's still in volatile memory—you'll eventually meet someone who lost their data at the worst possible moment.</p>
+    
+    <p>The Write-Ahead Log is the solution everyone converges on, independently, like different civilizations discovering the arch. Postgres uses it. MySQL's InnoDB uses it. SQLite, LevelDB, RocksDB, etcd—they all use some variant of the same idea. Log first, ask questions later.</p>
+    
+    <p>Here's the trick: instead of updating data files directly, you append a record describing what you're about to do. "I will update row 47 to value X." That record goes to a sequential log file, which is much faster to write than random I/O into a B-tree. Only after the log is durably on disk do you modify the actual data structures. If the system crashes, you replay the log. If it doesn't, you eventually checkpoint and clean up.</p>
+    
+    <p>The performance gain comes from two places. First, sequential writes are fast. A spinning disk can do them at nearly full throughput. An SSD loves them because they don't trigger garbage collection. Second, the log is append-only, which means no locks, no coordination, no seeking. Multiple threads can race to append their records, and the OS handles ordering.</p>
+    
+    <p>But the real genius is how WAL enables features beyond crash recovery. Replication: ship the log to followers, let them replay it. Point-in-time recovery: keep archived logs, replay to any moment. Change data capture: external systems read the log to see what changed without querying the database. The log becomes the source of truth, and everything else—tables, indexes, materialized views—is just a cache.</p>
+    
+    <p>This pattern shows up everywhere once you start looking. Event sourcing in application design is WAL for your domain model. Kafka is a distributed WAL. Git's object store is a content-addressed log. Even CPUs have a kind of WAL: the reorder buffer tracks speculative execution, and only when instructions retire does their effect become architecturally visible. Commit first, make it real later.</p>
+    
+    <p>There's a deeper observation here about the nature of state. Mutable state is hard to reason about. It changes under you. But a log is immutable. You can copy it, back it up, analyze it without fear. The database's current state is just a fold over the log, a reduce operation from the beginning of time. Time travel becomes trivial: start from the beginning, stop at timestamp T.</p>
+    
+    <p>Of course, there's complexity. Logs grow forever if you let them. You need checkpoints, compaction, garbage collection. You need to handle partial writes, checksums, corruption detection. The boundary between "logged" and "applied" creates interesting failure modes. And recovery takes time proportional to log size, which is why databases obsess over checkpoint frequency.</p>
+    
+    <p>Still, the tradeoff is worth it. I've seen systems that tried to be clever—direct writes with fancy locking, in-place updates with shadow paging, copy-on-write trees—and they all eventually sprout something WAL-shaped, or they lose data. The pattern is too useful, too fundamental. It's not just a technique; it's a recognition that persistence is hard, and the best way to handle hard things is to make them someone else's problem, sequentially, in a file that only grows.</p>
+    
+    <p class="muted">//</p>
+</body>
+</html>

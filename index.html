@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-01</div>
+            <h2 class="post-title"><a href="posts/2026-03-01-wal.html">wal</a></h2>
+            <p class="post-excerpt">There's a fundamental tension in database design between speed and safety. You want to write data quickly, flush it to disk, return success to the caller. But disks are slow, and power cuts don't wait for fsync. If you lie about durability—if you claim a transaction committed when it's still in volatile memory—you'll eventually meet someone who lost their data at the worst possible moment.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-02-28</div>
             <h2 class="post-title"><a href="posts/2026-02-28-cow.html">cow</a></h2>
             <p class="post-excerpt">There's a moment in Rust when you realize the borrow checker isn't just a safety mechanism—it's a design tool. You're writing a function that takes a string and returns a modified version. Sometimes you need to change it. Sometimes you don't. The naive approach clones every time, burning cycles on data that might already be exactly what you need.</p>
