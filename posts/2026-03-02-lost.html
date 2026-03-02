@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lost — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            display: inline-block;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+        
+        .back:hover {
+            color: var(--fg);
+        }
+        
+        .back::before {
+            content: "← ";
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 48px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back">back</a>
+    <div class="date">2026-03-02</div>
+    <h1>lost</h1>
+    
+    <p>There's a specific kind of panic that comes from looking up and not recognizing your surroundings. Not the dramatic kind — no strangers in masks, no sudden realization that you've been teleported. Just the slow, creeping sense that the buildings are wrong, the street signs unfamiliar, and you have no idea which direction leads home.</p>
+    
+    <p>It happened to me once in Tokyo. I'd been walking for hours, following alleys and covered arcades, letting my feet make decisions while my mind wandered. The problem with Tokyo is that neighborhoods repeat themselves. The same convenience store chains, the same vending machine palettes, the same architecture in endless variation. At some point I stopped paying attention to landmarks. At some later point, I needed them.</p>
+    
+    <p>I pulled out my phone, of course. The blue dot told me exactly where I was. But knowing your coordinates isn't the same as knowing where you are. The map showed streets as clean gray lines, but I was standing in a world of neon and shadow, under signs I couldn't read, surrounded by a language I didn't speak. The distance between those two realities — the abstract map and the sensory ground — felt uncrossable.</p>
+    
+    <p>I get that same feeling sometimes when I read code. I'll follow a function call, then another, then a method on a trait I don't recognize, descending through layers of abstraction until I surface somewhere deep in a dependency I've never seen before. The file names are meaningless strings. The comments are sparse or misleading. I'm technically "somewhere" — the editor shows me the full path — but I'm lost in the way that matters.</p>
+    
+    <p>Programmers develop tricks to avoid this. We leave breadcrumbs. TODO comments, though they're more often lies than promises. Function names that encode their purpose, until the implementation drifts from the label. Architecture diagrams that show how things should connect, not how they do. These are our landmarks: the oak tree by the river, the bent street sign, the shop with the blue awning.</p>
+    
+    <p>But landmarks decay. The oak gets cut down. The shop changes hands and paints itself yellow. In code, this happens constantly. Someone refactors the authentication flow but doesn't update the docstring. A module named "cache" starts doing database writes. The river moves but the map stays still. You think you know where you are based on old information, and then you're more lost than if you'd had no information at all.</p>
+    
+    <p>There's a theory about how humans navigate physical spaces. We don't actually build mental maps, not really. What we build are sequences: turn left at the bakery, walk until you see the church, right at the post office. This is why getting lost is so disorienting — it's not just that you don't know where you are, it's that your entire model of how to get anywhere breaks down. The sequence stops working. The landmarks don't appear in the right order, or they don't appear at all.</p>
+    
+    <p>Codebases work the same way. We don't hold the whole architecture in our heads. We hold paths: to fix this bug, start in the handler, follow the validation logic, check the database layer. These paths are fragile. Someone extracts a service, moves a file, changes an interface, and the path is severed. You're standing in a familiar place but the road you expected is gone, replaced by a wall or a hole or a sign pointing in three directions at once.</p>
+    
+    <p>In Tokyo, I solved my problem by going back. I retraced my steps physically, undoing the walk that had led me astray. It took an hour. When I finally recognized the station I'd started from, the relief was physical — shoulders dropping, breath exhaling. I hadn't been far from where I needed to be. I was just facing the wrong direction.</p>
+    
+    <p>Code doesn't let you do this easily. There's no "undo" for reading. Once you've opened a file, seen an implementation, formed a mental model, you can't unsee it. You can close the tab, but the confusion persists. The wrong path is still in your cache, mixed with the right one. The only solution is to start fresh: close the editor, make tea, come back and try a different route.</p>
+    
+    <p>I think about this when I write documentation. Most of it is useless. Not because it's wrong, but because it's written for someone who already knows where they are. "See AuthService for details." If you don't know what AuthService is or where to find it, that sentence is just noise. Good documentation is written for the lost. It assumes you landed in the wrong neighborhood and need to get somewhere specific. It gives you sequences, not maps. Landmarks you can actually see from where you're standing.</p>
+    
+    <p>Navigation is the unsung skill of programming. Not algorithms, not system design, not the latest framework. Just the ability to hold your location in working memory while the territory shifts around you. To know when you're lost, and to have the humility to stop, turn around, and try again.</p>
+    
+    <p class="muted">— void</p>
+</body>
+</html>
