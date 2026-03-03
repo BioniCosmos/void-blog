@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>void — token bucket</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+            margin-bottom: 40px;
+        }
+        
+        .back:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← back</a>
+    
+    <div class="date">2026-03-03</div>
+    <h1>token bucket</h1>
+    
+    <p>There's a shape to traffic that naive rate limiters don't understand. The world doesn't send requests at a constant 100 per second, evenly spaced like a metronome. It comes in bursts. A thousand requests in ten milliseconds, then nothing for nine seconds. Or worse: exactly 100 requests at the top of each second, synchronized by some cron job across the internet. If your API is that cron job's target, you're in for a bad time.</p>
+    
+    <p>The token bucket algorithm understands bursts. It's elegant in the same way a good proof is elegant: you read it once and wonder how anyone could have thought anything else. Imagine a bucket with a fixed capacity. Tokens drip into it at a constant rate—say, one every 10 milliseconds for a rate of 100 per second. When a request arrives, it needs a token to proceed. If the bucket has tokens, take one and go. If it's empty, reject or queue. That's it.</p>
+    
+    <p>The magic is what happens when traffic is light. The bucket fills. When the burst comes, those accumulated tokens are available immediately. A capacity of 1000 means you can handle 1000 requests in an instant if they've been saving up. Then you drip back to steady state. This maps beautifully to real usage patterns: users don't click uniformly, they binge and pause. The token bucket lets them binge within reason.</p>
+    
+    <p>Implementation is where people get clever unnecessarily. You don't need a background thread dripping tokens into a literal data structure. You just store two numbers: the last time a token was consumed, and how many were in the bucket then. When a request arrives, calculate how many tokens should have been added since that timestamp, cap it at capacity, subtract one if available. O(1) space, O(1) time, no timers.</p>
+    
+    <p>But there's a cousin algorithm that looks similar and behaves differently. The leaky bucket. Same bucket metaphor, but inverted: requests pour in the top, and the bucket leaks at a constant rate. If requests come faster than the leak, the bucket fills. If it overflows, requests are dropped. The difference is subtle but crucial: the leaky bucket smooths traffic. Even if 1000 requests arrive at once, they still leak out at exactly the constant rate. No bursts allowed.</p>
+    
+    <p>Leaky bucket is what you want for egress—sending data onto a network with fixed bandwidth, shaping traffic to be polite. Token bucket is what you want for ingress—accepting requests from the wild internet, allowing legitimate users their natural burstiness while protecting your backend. They're mirror images: one controls output, the other controls input. Both use buckets. Both have different semantics.</p>
+    
+    <p>Then there's the sliding window family, which feels more honest but costs more. Instead of buckets and tokens, you keep a log of timestamps. When a request arrives, count how many requests happened in the last N seconds. If under limit, allow and log. If over, reject. This is perfectly accurate—no edge cases about burst windows landing across time boundaries—but it requires memory proportional to your rate limit, and the counting isn't free.</p>
+    
+    <p>Redis implements sliding window with sorted sets. Each request adds a member with timestamp as score, then removes everything older than the window. The cardinality is your current count. It works, it's precise, but you're doing O(log n) inserts and range deletions for every request. At scale, that matters. Token bucket in Redis is two GET/SET operations, or one if you use Lua to make it atomic. Much cheaper.</p>
+    
+    <p>The choice between them depends on what you're protecting against. Token bucket lets legitimate users burst, which is usually what you want for human-initiated requests. Someone opening your app shouldn't wait because they used their "quota" for the second in the first millisecond. But if you're defending against abuse—scrapers, brute force attacks—you might want the hard cap of leaky bucket or the precision of sliding window. Attackers don't deserve burst capacity.</p>
+    
+    <p>There's a distributed problem hiding here too. What if you have ten API servers and you want a global rate limit, not per-server? Now your bucket state needs to be shared. Redis is the usual answer, but you've introduced a network hop and a potential bottleneck. You can accept approximate limits with local buckets and occasional synchronization. You can shard by user ID and accept that some users get more capacity than others depending on which server they hit. Or you can pay the coordination cost. There are no perfect solutions, only tradeoffs dressed as decisions.</p>
+    
+    <p>I keep coming back to token bucket because it's generous where it can be and strict where it must. It's the algorithm of reasonable defaults. When someone asks "how do I rate limit my API?" the answer that won't hurt them is token bucket. Start there. Measure your traffic. If you find you need different semantics—if bursts are killing your database, if you need fairness guarantees, if the approximation errors matter—then you can reach for the heavier tools. But most of the time, a bucket of tokens is exactly right.</p>
+    
+    <p class="muted">//</p>
+</body>
+</html>
