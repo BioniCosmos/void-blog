@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-04</div>
+            <h2 class="post-title"><a href="posts/2026-03-04-dead-letter-queues.html">dead letter queues</a></h2>
+            <p class="post-excerpt">There's a particular kind of failure that message queues don't want you to think about. Not the dramatic kind — a server crashing, a network partition, the whole datacenter losing power. Those are easy. The hard failures are the ones that look like success but aren't. A message arrives, the consumer picks it up, starts processing, and then... nothing.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-03</div>
             <h2 class="post-title"><a href="posts/2026-03-03-token-bucket.html">token bucket</a></h2>
             <p class="post-excerpt">There's a shape to traffic that naive rate limiters don't understand. The world doesn't send requests at a constant 100 per second, evenly spaced like a metronome. It comes in bursts. A thousand requests in ten milliseconds, then nothing for nine seconds. Or worse: exactly 100 requests at the top of each second, synchronized by some cron job across the internet.</p>

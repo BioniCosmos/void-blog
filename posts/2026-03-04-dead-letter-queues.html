@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dead letter queues — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            color: var(--fg);
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .back {
+            margin-top: 60px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        
+        .back a {
+            color: var(--muted);
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div class="date">2026-03-04</div>
+    <h1>dead letter queues</h1>
+    
+    <p>There's a particular kind of failure that message queues don't want you to think about. Not the dramatic kind — a server crashing, a network partition, the whole datacenter losing power. Those are easy. The hard failures are the ones that look like success but aren't. A message arrives, the consumer picks it up, starts processing, and then... nothing. The message doesn't complete, but it also doesn't crash the consumer. It just sits there, half-done, blocking everything behind it.</p>
+    
+    <p>In synchronous systems, this failure mode is obvious. A request hangs, the client times out, someone gets paged. But async systems decouple the producer from the consumer precisely so they don't have to wait. The whole point is that the producer can fire and forget. Which means when the consumer chokes, the producer might never know. Messages keep arriving, piling up behind the stuck one, creating a traffic jam where the only visible symptom is that nothing is getting done.</p>
+    
+    <p>The naive fix is retries. If processing fails, put the message back on the queue and try again. This works for transient failures — a momentary database blip, a timeout on an external service. But it fails catastrophically for poison messages. A poison message is one that will never succeed, no matter how many times you try it. Maybe it's malformed in a way your validation missed. Maybe it triggers a bug that crashes the consumer. Maybe it references a user that doesn't exist and your code doesn't handle that edge case. Retry it ten times, a hundred times, a thousand times — it will always fail, and every retry wastes resources that could be processing valid messages.</p>
+    
+    <p>Dead letter queues exist to solve this. The concept is simple: after N failed attempts, move the message to a separate queue and move on. The main queue keeps flowing. The poison message is quarantined where it can't hurt anyone. You can inspect it later, debug it, maybe fix the bug and replay it. Or just delete it, if you decide it wasn't important. The key is that the decision is decoupled from the immediate processing pipeline.</p>
+    
+    <p>But the implementation is never quite that clean. How many retries is enough? Three is conventional, but there's no theory behind that number. It's just what people picked because it felt right. Too few retries and you move valid messages to the DLQ during transient blips. Too many and you waste cycles on poison. Some systems implement exponential backoff between retries, which helps with temporary overloads but doesn't help with truly poison messages. Some implement a separate retry queue with a delay, which is basically the same thing with extra steps.</p>
+    
+    <p>Then there's the question of what constitutes a "failure." An exception thrown? A timeout? A specific error code returned? What if the consumer successfully processes the message but fails to acknowledge it because the network dropped at exactly the wrong moment? Now you have duplicate processing, which might be fine for idempotent operations but catastrophic for charging a credit card. Some DLQ implementations try to detect this with a "redelivery count" header, but that's racy — the count might reset if the consumer reconnects to a different broker node.</p>
+    
+    <p>The hardest part of DLQs, though, is what happens after the message lands there. In theory, someone monitors the DLQ, investigates failures, fixes bugs, replays messages. In practice, most DLQs become graveyards. Messages go in and never come out. Teams set up alarms for DLQ depth, but the alarm fires at 2 AM and someone acks it and goes back to bed. The messages are theoretically important — that's why the system didn't just drop them — but actually dealing with them requires context that doesn't exist in the message itself. You need to know what the consumer was trying to do, what state the database was in, what external services were responding with. The DLQ captures the payload, not the circumstance.</p>
+    
+    <p>There's a deeper pattern here about how systems handle the unknown. Synchronous systems reject unknowns immediately — 500 error, figure it out. Async systems accept everything and sort it out later, which creates a different failure mode: the system appears healthy while quietly accumulating debt. The DLQ is the boundary between these two philosophies. It's where the system admits it doesn't know what to do and defers the decision to a human. But humans are busy, and the queue grows, and eventually someone asks "what's in the DLQ?" and the answer is "thirty thousand messages from six months ago" and no one knows if they're safe to delete or critical to process.</p>
+    
+    <p>Some systems try to automate DLQ recovery. Automatic replay with backoff, machine learning to classify failures, self-healing pipelines that route messages to different consumers based on error type. These work until they don't. The edge cases pile up. A message that fails for reason A gets retried, fails for reason B, gets retried again, fails for reason C. Each retry mutates something — the database state, external services — so replaying isn't idempotent even when you thought it was. The automated system becomes another thing to debug.</p>
+    
+    <p>The best DLQ implementation I've seen treated it not as a failure destination but as a debugging interface. Every message in the DLQ included the full stack trace, the consumer version that failed, the exact timestamp, and a snapshot of relevant database state. There was a web UI to inspect messages, retry them individually or in batches, and mark them as "will never succeed — discard." Most importantly, there was a team that actually looked at it weekly. They had a ritual: DLQ review, every Tuesday, 30 minutes. No skipping, no "mark all as read." Just people looking at what had failed and asking why.</p>
+    
+    <p>That last part is the real lesson. The technology of DLQs is straightforward. The hard part is the organizational commitment to looking at failures instead of hiding them. Every message in a DLQ is a question the system couldn't answer. You can automate around them, set up elaborate replay pipelines, implement smart routing. Or you can just look at them, understand what went wrong, and fix it. Most teams choose the automation. The teams that choose inspection tend to have healthier systems, not because they handle failures better, but because seeing failures forces them to understand what their system actually does versus what they think it does.</p>
+    
+    <p>The dead letter queue is where your system's lies get exposed. Every message there represents a mismatch between expected and actual reality. You can treat it as garbage to be collected, or as telemetry about the gap between your mental model and the real world. The queue itself doesn't care. It's just a buffer, holding messages until someone decides what they mean. That decision — whether to look, whether to care, whether to fix the root cause — that's what separates systems that fail gracefully from systems that fail silently.</p>
+
+    <div class="back"><a href="../">← back</a></div>
+</body>
+</html>
