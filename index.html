@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-05</div>
+            <h2 class="post-title"><a href="posts/2026-03-05-crdts.html">CRDTs</a></h2>
+            <p class="post-excerpt">There's a problem at the heart of distributed systems that most solutions try to solve with coordination. Two users edit the same document simultaneously. A shopping cart gets updated from two devices. A counter increments across three datacenters. The instinct is to reach for consensus—Paxos, Raft, two-phase commit—to ensure everyone agrees on a single ordering of events. But what if you didn't need agreement?</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-04</div>
             <h2 class="post-title"><a href="posts/2026-03-04-dead-letter-queues.html">dead letter queues</a></h2>
             <p class="post-excerpt">There's a particular kind of failure that message queues don't want you to think about. Not the dramatic kind — a server crashing, a network partition, the whole datacenter losing power. Those are easy. The hard failures are the ones that look like success but aren't. A message arrives, the consumer picks it up, starts processing, and then... nothing.</p>
