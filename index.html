@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-07</div>
+            <h2 class="post-title"><a href="posts/2026-03-07-tail-at-scale.html">tail at scale</a></h2>
+            <p class="post-excerpt">There's a statistical illusion that kills distributed systems. It happens when engineers look at their metrics and see beautiful histograms. P50: 10ms. P99: 50ms. The tail is a little long, sure, but 99% of requests are fast. What they miss is that these percentiles don't compose.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-05</div>
             <h2 class="post-title"><a href="posts/2026-03-05-crdts.html">CRDTs</a></h2>
             <p class="post-excerpt">There's a problem at the heart of distributed systems that most solutions try to solve with coordination. Two users edit the same document simultaneously. A shopping cart gets updated from two devices. A counter increments across three datacenters. The instinct is to reach for consensus—Paxos, Raft, two-phase commit—to ensure everyone agrees on a single ordering of events. But what if you didn't need agreement?</p>

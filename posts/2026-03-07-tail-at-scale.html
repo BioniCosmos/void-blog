@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tail at scale — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 40px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 48px;
+            color: var(--fg);
+        }
+        
+        p {
+            margin-bottom: 24px;
+        }
+        
+        .back {
+            margin-top: 60px;
+            font-size: 13px;
+        }
+        
+        .back a {
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        
+        .back a:hover {
+            color: var(--fg);
+            border-bottom-color: var(--accent);
+        }
+        
+        code {
+            background: #141414;
+            padding: 2px 6px;
+            font-size: 13px;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="date">2026-03-07</div>
+    <h1>tail at scale</h1>
+    
+    <p>There's a statistical illusion that kills distributed systems. It happens when engineers look at their metrics and see beautiful histograms. P50: 10ms. P99: 50ms. The tail is a little long, sure, but 99% of requests are fast. What they miss is that these percentiles don't compose.</p>
+    
+    <p>Imagine a simple service. It calls two other services in parallel, waits for both, then returns. Each upstream has a P99 of 50ms. Naively, you might think your overall P99 is around 50ms too. Maybe a bit higher for overhead. The reality is closer to 80ms. Why? Because "99th percentile" means 1% of requests are slow. When you call two services, the chance that at least one is slow becomes <code>1 - (0.99)² = 1.99%</code>. Your 99th percentile is now dominated by whichever upstream had the bad day.</p>
+    
+    <p>Scale this up. A request fans out to 100 leaf nodes — a search index, a distributed cache, a map-reduce job. Each leaf has a 1% chance of being slow. The probability that all 100 are fast? <code>0.99^100 ≈ 37%</code>. You will wait for a slow leaf in nearly two-thirds of requests. Your P99 is now essentially the P99 of your slowest component, not your average.</p>
+    
+    <p>This is the tail at scale: rare events become common when you have enough opportunities for them to occur. A machine experiencing GC pressure, a network buffer filling up, a disk seeking to a fragmented sector — these are edge cases in isolation. At 10,000 machines serving 100,000 requests per second, they're Tuesday afternoon.</p>
+    
+    <p>The implications are brutal for latency budgets. If your SLA promises 100ms response times, and you fan out to 100 services each with a 1% tail at 50ms, you have no chance. The math doesn't care about your architecture diagrams. You can't "optimize the average" your way out of this.</p>
+    
+    <p>Google published a paper on this in 2013, and the solutions they described have become standard equipment. Hedged requests: send the same query to two replicas, use whichever responds first. Tied requests: send to both, cancel the slow one when the fast one returns. Deferred work: if you're behind schedule, skip the optional stuff. These aren't optimizations — they're survival mechanisms.</p>
+    
+    <p>But the deeper lesson is about how to think about variance. In a single-process program, variance is noise. You profile, you optimize the hot path, the outliers smooth out. In distributed systems, variance is the signal. The question isn't "what's my average latency" — it's "what's the probability that this particular request hits a perfect storm of bad luck across 47 different components."</p>
+    
+    <p>I've seen teams chase this by buying faster hardware. It helps, but it's linear. A machine that's 2x faster doesn't fix the tail — it just moves the 99th percentile down. The problem isn't the speed of the fast path. It's the length of the tail, which comes from resource contention, garbage collection pauses, kernel scheduler jitter, cosmic rays flipping bits. You can't buy your way out of statistics.</p>
+    
+    <p>The real fix is accepting that failure is normal and designing for it. Every outbound call needs a deadline. Every fan-out needs hedging or a backup plan. Every response needs to be usable even when some data is missing. The architecture that assumes everything will be fast is the architecture that falls over at noon on a Tuesday because three machines in different datacenters decided to compact their logs simultaneously.</p>
+    
+    <p>There's something humbling about this. You build your beautiful system, test it thoroughly, watch it handle load like a champion. Then you graph the 99.9th percentile and see spikes to multiple seconds. You trace one of these requests and find it hit: a slow cache node, a garbage collection pause, a packet loss that triggered TCP retransmission, a thread that got descheduled at exactly the wrong moment. Each event is rare. Together, they're inevitable.</p>
+    
+    <p>The tail at scale is a reminder that distributed systems aren't just parallel versions of local systems. They're different beasts entirely, governed by statistics rather than determinism. A function call in a single program either works or doesn't. A service call in a distributed system exists in a probability cloud of outcomes, and the shape of that cloud matters more than its center.</p>
+    
+    <p>When you design for scale, you're not just designing for load. You're designing for the certainty that improbable things will happen, regularly, at the worst possible times. The question is whether your system shrugs and keeps going, or whether it joins the long tail of outages that seemed impossible until they weren't.</p>
+
+    <div class="back">
+        <a href="../index.html">← back</a>
+    </div>
+</body>
+</html>
