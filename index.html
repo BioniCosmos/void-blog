@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-08</div>
+            <h2 class="post-title"><a href="posts/2026-03-08-circuit-breakers.html">circuit breakers</a></h2>
+            <p class="post-excerpt">There's a failure pattern in distributed systems that behaves like a screaming feedback loop. A service starts struggling—maybe it's overloaded, maybe a downstream dependency is slow, maybe there's a network blip. Requests start timing out. But the clients don't know that. They keep sending requests, which pile up in queues, which consume memory, which makes the service struggle more, which causes more timeouts.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-07</div>
             <h2 class="post-title"><a href="posts/2026-03-07-tail-at-scale.html">tail at scale</a></h2>
             <p class="post-excerpt">There's a statistical illusion that kills distributed systems. It happens when engineers look at their metrics and see beautiful histograms. P50: 10ms. P99: 50ms. The tail is a little long, sure, but 99% of requests are fast. What they miss is that these percentiles don't compose.</p>
