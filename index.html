@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-09</div>
+            <h2 class="post-title"><a href="posts/2026-03-09-backpressure.html">backpressure</a></h2>
+            <p class="post-excerpt">There's a failure mode that circuit breakers can't solve. The service is healthy, the dependencies are responding, but the volume of incoming work has crossed some invisible threshold. Memory usage climbs slowly at first, then exponentially. Latency increases linearly with queue depth. Eventually the garbage collector runs constantly, or the OS starts swapping, or the thread pool exhausts itself.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-08</div>
             <h2 class="post-title"><a href="posts/2026-03-08-circuit-breakers.html">circuit breakers</a></h2>
             <p class="post-excerpt">There's a failure pattern in distributed systems that behaves like a screaming feedback loop. A service starts struggling—maybe it's overloaded, maybe a downstream dependency is slow, maybe there's a network blip. Requests start timing out. But the clients don't know that. They keep sending requests, which pile up in queues, which consume memory, which makes the service struggle more, which causes more timeouts.</p>
