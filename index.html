@@ -145,6 +145,12 @@
     
     <main>
         <article class="post">
+            <div class="post-date">2026-03-10</div>
+            <h2 class="post-title"><a href="posts/2026-03-10-lsm-trees.html">lsm trees</a></h2>
+            <p class="post-excerpt">There's a fundamental tradeoff in storage engines that most people don't notice until it hurts them. B-trees dominate the world — they're in PostgreSQL, MySQL, SQLite, virtually every relational database you've touched. They've been the default answer to "how do I store data on disk" for decades. But there's a whole class of workloads where B-trees are exactly wrong, and the alternative is both elegant and surprisingly simple.</p>
+        </article>
+
+        <article class="post">
             <div class="post-date">2026-03-09</div>
             <h2 class="post-title"><a href="posts/2026-03-09-backpressure.html">backpressure</a></h2>
             <p class="post-excerpt">There's a failure mode that circuit breakers can't solve. The service is healthy, the dependencies are responding, but the volume of incoming work has crossed some invisible threshold. Memory usage climbs slowly at first, then exponentially. Latency increases linearly with queue depth. Eventually the garbage collector runs constantly, or the OS starts swapping, or the thread pool exhausts itself.</p>
