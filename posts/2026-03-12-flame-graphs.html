@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>flame graphs — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.8;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-block;
+            margin-bottom: 40px;
+        }
+        
+        .back:hover {
+            color: var(--fg);
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 32px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back">← back</a>
+    
+    <div class="date">2026-03-12</div>
+    <h1>flame graphs</h1>
+    
+    <p>There's a moment in performance debugging where you realize the numbers are lying to you. Not deliberately — they're accurate, technically. 15% of time in <code>memcpy</code>. 8% in <code>malloc</code>. 3% in <code>strlen</code>. You stare at the flat list, sorted by inclusive time, and you feel like you're looking at symptoms instead of disease. The profiler is telling you what's slow, but not why it's being called.</p>
+
+    <p>I spent years in that place. I'd see <code>pthread_mutex_lock</code> at 20% and think, okay, contention. But which mutex? Where was it acquired? What sequence of calls led to this particular lock becoming a hotspot? The profiler output was a shallow grave where useful context went to die.</p>
+
+    <p>Then I saw my first flame graph. It was like someone turned on a light in a room I hadn't realized was dark. Instead of a sorted list, I saw a tower. A visual hierarchy where the width of each block represented time spent, and the vertical stack represented the call chain. The flame graph didn't just tell me that mutex locking was expensive — it showed me the exact path through six layers of abstraction that led there. A database query builder. An ORM. A connection pool. A retry wrapper. Finally, the mutex itself.</p>
+
+    <p>The insight was immediate and humbling. The problem wasn't mutex contention per se. The problem was that we were taking the lock 50,000 times per second because a caching layer wasn't being hit. The flame graph made this obvious because I could see the tower — the wide base of cache misses feeding into the narrow bottleneck of serialization. The flat profiler would have shown me the bottleneck forever without revealing the source.</p>
+
+    <p>Flame graphs were invented by Brendan Gregg, who worked on performance at Sun Microsystems and later Netflix. The insight is beautifully simple: sample the stack trace thousands of times per second, aggregate identical stacks, and visualize them as a hierarchy where each frame's width is proportional to its presence in the samples. Warm colors (hence "flame") help distinguish adjacent frames. The result is a density plot of where your program actually spends its time, organized by how it got there.</p>
+
+    <p>What makes flame graphs powerful isn't just the visualization — it's the compression of information. A typical CPU profile might contain millions of samples. A flame graph reduces this to a single image that humans can parse in seconds. You learn to read them quickly: wide blocks are expensive, tall stacks are deep, and plateaus indicate code paths that consume time without doing much work. The "flames" licking upward are the leaf functions — the actual work being done at the bottom of each call chain.</p>
+
+    <p>There are patterns you learn to recognize. The "wide pancake" — a shallow stack spending all its time in one function — usually means algorithmic inefficiency. The "skyscraper" — a tall, narrow tower — suggests architectural overhead, layers of abstraction adding up. The "forest" — many small towers of similar width — indicates distributed work, often harder to optimize. And the "volcano" — a single massive frame with many thin descendants — is often a synchronization primitive or I/O bottleneck.</p>
+
+    <p>The real magic happens when you compare two flame graphs. Same workload, different code versions. The differential flame graph highlights what changed: red for growth, blue for reduction. I've watched engineers stare at these comparisons with the focus of someone reading tea leaves. There's a story in the shift of color, a narrative of optimization or regression that would take hours to extract from raw profiles.</p>
+
+    <p>Off-CPU flame graphs are perhaps even more valuable than CPU ones. While CPU graphs show what your program is doing, off-CPU graphs show what it's waiting for. I/O. Locks. Timers. Condvars. The patterns are different here — long vertical descents into kernel syscalls, wide blocks in <code>futex</code> or <code>epoll_wait</code>. An off-CPU flame graph once revealed that a service was spending 40% of its time waiting on a DNS resolver that was configured with a 5-second timeout. The fix was one line. Finding it without the visualization would have required instrumenting every syscall.</p>
+
+    <p>There are limitations, of course. Flame graphs sample, so they miss short-lived events. They aggregate, so temporal patterns disappear — you can't see that function A calls B then C, only that both B and C are descendants of A. And they can be overwhelming for codebases with deep call stacks, the towers becoming too thin to read at the top. But these are trade-offs, not flaws. The goal isn't perfect information — it's actionable insight.</p>
+
+    <p>I think what I love most about flame graphs is their honesty. They don't care about your abstractions. They don't respect your module boundaries or your clean architecture diagrams. They show what the CPU is actually doing, frame by frame, sample by sample. When you see a 30-layer tower reaching up from <code>main</code> through dependency injection frameworks, dynamic proxies, and aspect-oriented middleware just to call <code>strcmp</code>, the flame graph isn't judging you. But you might start judging your choices.</p>
+
+    <p>The best optimizations I've seen came from flame graph moments. The developer who realized their "fast" hash map was spending 60% of time in a murmurhash implementation that processed keys byte-by-byte. The team that discovered their event loop was dominated by JSON serialization because they were stringifying the same object 10,000 times. The engineer who found that a "simple" logging call was triggering a stack trace capture on every invocation. In each case, the raw profiler data was available but invisible. The flame graph made it seen.</p>
+
+    <p>If you profile code and you're not using flame graphs, you're debugging with one eye closed. The tool is free, the learning curve is shallow, and the insights are immediate. Generate one the next time something feels slow. Follow the widest towers down to their roots. See where the heat is concentrated. The fire is already there — you just need to look at it.</p>
+</body>
+</html>
