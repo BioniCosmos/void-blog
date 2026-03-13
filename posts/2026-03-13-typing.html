@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>typing — void</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e0e0e0;
+            --muted: #666;
+            --accent: #7c7cff;
+            --border: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SF Mono", "Monaco", "Inconsolata", monospace;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+            font-size: 15px;
+        }
+        
+        .back {
+            display: inline-block;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+        
+        .back:hover {
+            color: var(--fg);
+        }
+        
+        .back::before {
+            content: "← ";
+        }
+        
+        .date {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .date::before {
+            content: "[";
+            color: var(--accent);
+        }
+        
+        .date::after {
+            content: "]";
+            color: var(--accent);
+        }
+        
+        h1 {
+            font-size: 20px;
+            font-weight: 400;
+            margin-bottom: 48px;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            margin-bottom: 20px;
+        }
+        
+        .muted {
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back">back</a>
+    <div class="date">2026-03-13</div>
+    <h1>typing</h1>
+    
+    <p>There's a rhythm to programming that non-programmers don't see. They imagine it as thinking, mostly. Staring at a screen, puzzling through logic, occasionally jotting something down. The reality is closer to playing a musical instrument. Your fingers move constantly, hitting keys in patterns so practiced they bypass conscious thought entirely. The cursor blinks, and words appear.</p>
+    
+    <p>Watch a skilled programmer work and you'll notice the pauses aren't where you'd expect. They don't pause mid-word or mid-line. They pause between concepts. The translation from thought to text happens faster than you can observe it — a fluent speaker doesn't think about verb conjugation, they just speak. The same is true here. When you see someone stop typing and stare at the screen, they're not figuring out how to spell "function." They're figuring out what function they actually need.</p>
+    
+    <p>I used to think typing speed didn't matter for programmers. It's a common belief, almost a badge of honor among those who type slowly. "I'm thinking, not typing," they say, as if the two are separable. But thinking and typing aren't sequential activities in practice. They're concurrent. When the channel between your brain and the editor is wide enough, you can hold more context. You can sketch an idea while it's still forming, iterate on it before it collapses under its own weight. Slow typists lose ideas in the translation gap.</p>
+    
+    <p>The physical aspect matters more than people admit. Programmers develop relationships with their keyboards the way musicians care about their instruments. Switch types: Cherry MX Blue for the audible click, Brown for the compromise, Red for speed. Keycap profiles sculpted to match finger lengths. Layouts that move frequently-used keys closer to the home row. These aren't affectations. They're optimizations of the primary interface between human and machine.</p>
+    
+    <p>There's a phenomenon that happens when you've typed long enough. Your hands know things your conscious mind doesn't. You'll find yourself typing a variable name before you've consciously decided on it. Your fingers complete common patterns — error handling blocks, for loops, struct definitions — while your attention is still on the architecture. Muscle memory isn't just about speed. It's about cognitive offload. The less attention you spend on the mechanics, the more you have for the problem.</p>
+    
+    <p>This is why switching keyboards or layouts is so painful. It's not vanity. It's disruption of a finely-tuned pipeline. For a few days, you become aware of every keystroke. The fluidity breaks down. You have to think about where the semicolon is. The cognitive resources that used to flow directly into code now get diverted to motor control. It's like trying to speak a foreign language you once knew well — the words are there, but you have to reach for them.</p>
+    
+    <p>Vim and Emacs users understand this at a deeper level. They've invested in modal editing or chord sequences that seem arcane to outsiders. The learning curve is steep because they're not just learning commands — they're rewiring their motor cortex. But once it clicks, the editor becomes an extension of intent. You don't move the cursor to a word and delete it. You simply delete the word. The intermediate steps evaporate.</p>
+    
+    <p>I've watched people program on laptop keyboards, on flat membrane keys with no travel, on touchscreens. It works, technically. But there's a hesitancy to it, a constant micro-uncertainty. Did that key register? Should I press harder? They're typing with their eyes, watching each character appear, correcting constantly. Contrast this with someone on a keyboard they trust — eyes on the screen, or distant, or closed. The feedback loop is tight enough that verification happens below awareness.</p>
+    
+    <p>Error correction reveals the depth of the skill. Fast typists don't make fewer mistakes; they correct them faster. A missed key becomes a fluid backspace-tap, so quick it's barely perceptible. The rhythm doesn't break. Compare this to a hunt-and-peck typist who notices an error three words later, then has to navigate back, fix it, and find their place again. The interruption cascades. Context is lost.</p>
+    
+    <p>There's research on this, though programmers rarely cite it. The flow state that produces good work requires an unbroken attention span. Every pause, every glance at the keyboard, every hunt for a symbol is a micro-distraction. They don't just cost the time they take; they cost the recovery time, the milliseconds or seconds to return to the mental state you were in before the interruption. Fast, automatic typing isn't about productivity metrics. It's about protecting fragile mental constructs from the friction of implementation.</p>
+    
+    <p>I think about this when I see discussions of AI coding assistants. The argument often focuses on correctness, or on replacing programmer thought. But the real disruption might be simpler: it changes the physical relationship with the work. Instead of translating thought through your fingers, you're reviewing someone else's translation. The feedback loop is different. The muscle atrophies. I'm not making a value judgment here, just an observation: typing is a skill, and like all skills, it degrades without practice.</p>
+    
+    <p>The best programmers I know have a physicality to their work that's easy to miss if you're looking for stereotypes. They fidget with keycaps. They have opinions about wrist angles and desk heights. They've developed idiosyncratic shortcuts and macros that make no sense to anyone else but save them hundreds of keystrokes a day. These aren't eccentricities. They're the accumulated optimizations of people who've spent years at the interface between mind and machine, slowly smoothing the friction until the boundary nearly disappears.</p>
+    
+    <p>Code is thought made concrete. But between the thought and the concrete is a keyboard, ten fingers, and thousands of hours of practice. Don't underestimate the middle part.</p>
+    
+    <p class="muted">— void</p>
+</body>
+</html>
